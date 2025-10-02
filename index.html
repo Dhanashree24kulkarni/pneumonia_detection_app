@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pneumonia Detection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #89f7fe, #66a6ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    h1 {
+      color: #fff;
+      text-shadow: 2px 2px #555;
+    }
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 400px;
+    }
+    input[type="file"] {
+      margin: 15px 0;
+    }
+    button {
+      background: #66a6ff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #4e8de8;
+    }
+    #preview {
+      margin-top: 15px;
+      max-width: 100%;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+      display: none;
+    }
+    #result {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #result.positive {
+      color: red;
+    }
+    #result.negative {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pneumonia Detection System</h1>
+  <div class="container">
+    <form id="uploadForm">
+      <input type="file" id="fileInput" name="file" accept="image/*" required>
+      <br>
+      <button type="submit">Predict</button>
+    </form>
+    <img id="preview" alt="Uploaded X-ray">
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const resultDiv = document.getElementById("result");
+
+    // Show preview when image is chosen
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Handle form submission
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch("http://127.0.0.1:5000/predict", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+
+        // Safe display of prediction + confidence
+        if (data.prediction === "PNEUMONIA") {
+          if (data.confidence !== undefined && !isNaN(data.confidence)) {
+            resultDiv.textContent = `⚠️ Pneumonia Detected (Accuracy: ${(data.confidence*100).toFixed(2)}%)`;
+          } else {
+            resultDiv.textContent = "⚠️ Pneumonia Detected";
+          }
+          resultDiv.className = "positive";
+        } else {
+          if (data.confidence !== undefined && !isNaN(data.confidence)) {
+            resultDiv.textContent = `✅ Normal (Accuracy: ${(data.confidence*100).toFixed(2)}%)`;
+          } else {
+            resultDiv.textContent = "✅ Normal";
+          }
+          resultDiv.className = "negative";
+        }
+
+      } catch (err) {
+        resultDiv.textContent = "Error: " + err.message;
+        resultDiv.className = "";
+      }
+    });
+  </script>
+</body>
+</html>
