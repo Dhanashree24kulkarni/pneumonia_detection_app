@@ -21,6 +21,7 @@ pneumonia_detection_app/
 ├── app.py
 ├── requirements.txt
 └── pneumonia_model.h5
+|__ pneumonia_detection.py
 
 ## How to Run
 1. Clone the repository.
